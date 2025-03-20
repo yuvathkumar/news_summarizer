@@ -2,36 +2,35 @@
 import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
+from textblob import TextBlob
 
 def scrape_articles(company_name):
-    # Bing News RSS URL
     url = f"https://www.bing.com/news/search?q={company_name}+latest+news&format=rss"
     articles = []
     
     try:
-        # Fetch RSS feed
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         
-        # Parse XML with BeautifulSoup (per assignment rule)
         soup = BeautifulSoup(response.content, 'xml')
-        items = soup.find_all('item')[:10]  # Limit to 10
+        items = soup.find_all('item')[:10]
         
         for item in items:
             title = item.find('title').text.strip() if item.find('title') else "No title"
             desc = item.find('description')
             summary = desc.text.strip() if desc else "No summary available"
             
-            # Clean HTML from summary (minimal approach)
             soup_desc = BeautifulSoup(summary, 'html.parser')
             summary = soup_desc.get_text(strip=True)[:200]
+            
+            sentiment = get_sentiment(title, summary)
             
             articles.append({
                 "Title": title,
                 "Summary": summary,
-                "Sentiment": None,  # For Step 3
-                "Topics": []        # For Step 4
+                "Sentiment": sentiment,
+                "Topics": []
             })
         
         if not articles:
@@ -43,6 +42,20 @@ def scrape_articles(company_name):
         print(f"Error: {e}")
         return []
 
+def get_sentiment(title, summary):
+    # Combine title and summary for context
+    text = title + " " + summary
+    analysis = TextBlob(text)
+    polarity = analysis.sentiment.polarity
+    
+    # Adjust thresholds for news context
+    if polarity > 0.1:  # Slightly positive threshold
+        return "Positive"
+    elif polarity < -0.1:  # Slightly negative threshold
+        return "Negative"
+    else:
+        return "Neutral"
+
 # Test
 if __name__ == "__main__":
     company = input("Enter a company name: ")
@@ -51,4 +64,5 @@ if __name__ == "__main__":
         print(f"Article {i}:")
         print(f"  Title: {article['Title']}")
         print(f"  Summary: {article['Summary']}")
+        print(f"  Sentiment: {article['Sentiment']}")
         print()
