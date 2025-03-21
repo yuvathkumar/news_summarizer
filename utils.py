@@ -8,7 +8,7 @@ from gtts import gTTS
 import os
 
 def scrape_articles(company_name):
-    url = f"https://www.bing.com/news/search?q={company_name}+latest+news&format=rss"
+    url = f"https://www.bing.com/news/search?q={company_name}&format=rss"
     articles = []
     
     try:
@@ -18,6 +18,7 @@ def scrape_articles(company_name):
         
         soup = BeautifulSoup(response.content, 'xml')
         items = soup.find_all('item')[:10]
+        print(f"Fetched {len(items)} articles for {company_name}")  # Debug print
         
         for item in items:
             title = item.find('title').text.strip() if item.find('title') else "No title"
@@ -37,6 +38,7 @@ def scrape_articles(company_name):
                 "Topics": topics
             })
         
+        print(f"Processed {len(articles)} articles for {company_name}")  # Debug print
         if not articles:
             print(f"No articles found for {company_name}")
         
@@ -138,17 +140,9 @@ def comparative_analysis(company_name, articles):
     elif neg > pos + 2:
         final_summary = f"Mostly negative coverage for {company_name}."
 
-    # Translate to Hindi (basic manual translation for now)
-    hindi_translations = {
-        "Mixed sentiment with no clear trend": "मिश्रित भावना बिना स्पष्ट रुझान के।",
-        "Mostly positive coverage for": "के लिए ज्यादातर सकारात्मक कवरेज।",
-        "Mostly negative coverage for": "के लिए ज्यादातर नकारात्मक कवरेज।"
-    }
-    hindi_summary = hindi_translations.get(final_summary.split(company_name)[0].strip(), final_summary) + f" {company_name}"
-    
-    # Generate TTS
+    # Generate TTS using the English summary
     audio_file = f"{company_name}_summary.mp3"
-    tts = gTTS(text=hindi_summary, lang='hi', slow=False)
+    tts = gTTS(text=final_summary, lang='hi', slow=False)
     tts.save(audio_file)
 
     return {
