@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from textblob import TextBlob
+from collections import Counter
 
 def scrape_articles(company_name):
     url = f"https://www.bing.com/news/search?q={company_name}+latest+news&format=rss"
@@ -63,7 +64,7 @@ def get_topics(title, summary):
     blob = TextBlob(text)
     
     phrases = [phrase.lower().replace("’s", "").replace("’t", "").replace("’", "").strip() for phrase in blob.noun_phrases]
-    stop_words = {"microsoft", "company", "news", "report", "latest"}
+    stop_words = {"tesla", "company", "news", "report", "latest"}
     raw_topics = [phrase for phrase in phrases if len(phrase.split()) > 1 and not any(sw in phrase for sw in stop_words)]
     
     category_map = {
@@ -71,11 +72,11 @@ def get_topics(title, summary):
         "Innovation": ["feature", "new", "test", "unveiled", "advanced", "interface", "ui", "menu"],
         "Security": ["security", "camera", "attack", "monitor", "hacking", "protection"],
         "Manufacturing": ["manufacturing", "plant", "assembling", "production"],
-        "Leadership": ["ceo", "nadella", "secretary", "leadership", "president", "reshuffle", "employees", "officer", "change", "gates"],
+        "Leadership": ["ceo", "musk", "secretary", "leadership", "president", "reshuffle", "employees", "officer", "change"],
         "Sales": ["sales", "trade-in", "buyers", "stock", "purchases", "store", "position", "investment"],
         "Regulation": ["regulators", "administration", "government", "law"],
         "Technology": ["technology", "app", "ai", "system", "update", "software", "windows", "office", "copilot", "pc", "devices", "edge"],
-        "Controversy": ["controversy", "backlash", "pressure", "ethical", "removed"],
+        "Controversy": ["controversy", "backlash", "pressure", "ethical", "removed", "publicity", "reputation"],
         "Events": ["event", "anniversary", "celebration", "invites", "visit"],
         "Collaboration": ["collaboration", "together", "share", "discussion"]
     }
@@ -91,20 +92,84 @@ def get_topics(title, summary):
     else:
         if raw_topics:
             title_words = set(title.lower().split())
-            # Score by title overlap, then length as tiebreaker
-            best_topic = max(raw_topics, key=lambda p: (len(set(p.split()) & title_words), len(p)))
-            if len(best_topic) > 3:
-                return [best_topic.capitalize()]
+            # Filter out names (basic heuristic: skip if all lowercase and no keywords)
+            filtered_topics = [p for p in raw_topics if not (len(p.split()) == 2 and p.split()[1] in {"musk", "gerber", "nadella"})]
+            if filtered_topics:
+                best_topic = max(filtered_topics, key=lambda p: (len(set(p.split()) & title_words), len(p)))
+                if len(best_topic) > 3:
+                    return [best_topic.capitalize()]
         return ["Miscellaneous"]
+
+def comparative_analysis(company_name, articles):
+    if not articles:
+        return {"Company": company_name, "Articles": [], "Comparative Sentiment Score": {}, "Final Sentiment Analysis": "No data available"}
+
+    sentiments = Counter(article["Sentiment"] for article in articles)
+    total = len(articles)
+    sentiment_dist = {k: v for k, v in sentiments.items()}
+
+    all_topics = [t for article in articles for t in article["Topics"]]
+    topic_counts = Counter(all_topics)
+    common_topics = [t for t, c in topic_counts.items() if c > 1]
+    unique_topics = {i: [t for t in article["Topics"] if t not in common_topics] 
+                     for i, article in enumerate(articles, 1)}
+
+    coverage_diffs = []
+    for i in range(len(articles)):
+        for j in range(i + 1, len(articles)):
+            art1, art2 = articles[i], articles[j]
+            diff = {
+                "Comparison": f"Article {i+1} ({art1['Sentiment']}) focuses on {', '.join(art1['Topics'])}, "
+                            f"while Article {j+1} ({art2['Sentiment']}) covers {', '.join(art2['Topics'])}.",
+                "Impact": f"Article {i+1} leans {art1['Sentiment'].lower()} due to {art1['Topics'][0]}, "
+                         f"while Article {j+1} leans {art2['Sentiment'].lower()} due to {art2['Topics'][0]}."
+            }
+            coverage_diffs.append(diff)
+            if len(coverage_diffs) >= 2:
+                break
+        if len(coverage_diffs) >= 2:
+            break
+
+    pos, neg = sentiments.get("Positive", 0), sentiments.get("Negative", 0)
+    final_summary = "Mixed sentiment with no clear trend."
+    if pos > neg + 2:
+        final_summary = f"Mostly positive coverage for {company_name}."
+    elif neg > pos + 2:
+        final_summary = f"Mostly negative coverage for {company_name}."
+
+    return {
+        "Company": company_name,
+        "Articles": articles,
+        "Comparative Sentiment Score": {
+            "Sentiment Distribution": sentiment_dist,
+            "Coverage Differences": coverage_diffs,
+            "Topic Overlap": {
+                "Common Topics": common_topics,
+                "Unique Topics": {f"Article {i}": ts for i, ts in unique_topics.items() if ts}
+            }
+        },
+        "Final Sentiment Analysis": final_summary,
+        "Audio": "[Placeholder for Hindi Speech]"
+    }
 
 # Test
 if __name__ == "__main__":
     company = input("Enter a company name: ")
-    test_articles = scrape_articles(company)
-    for i, article in enumerate(test_articles, 1):
+    articles = scrape_articles(company)
+    result = comparative_analysis(company, articles)
+    
+    for i, article in enumerate(result["Articles"], 1):
         print(f"Article {i}:")
         print(f"  Title: {article['Title']}")
         print(f"  Summary: {article['Summary']}")
         print(f"  Sentiment: {article['Sentiment']}")
         print(f"  Topics: {article['Topics']}")
         print()
+    
+    print("Comparative Analysis:")
+    print(f"Sentiment Distribution: {result['Comparative Sentiment Score']['Sentiment Distribution']}")
+    print("Coverage Differences:")
+    for diff in result["Comparative Sentiment Score"]["Coverage Differences"]:
+        print(f"  - {diff['Comparison']} {diff['Impact']}")
+    print(f"Topic Overlap: {result['Comparative Sentiment Score']['Topic Overlap']}")
+    print(f"Final Sentiment: {result['Final Sentiment Analysis']}")
