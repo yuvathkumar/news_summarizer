@@ -5,6 +5,8 @@ import os
 import plotly.express as px
 import pandas as pd
 
+from utils import scrape_articles, comparative_analysis
+
 # Custom CSS for clean, meaningful styling
 st.markdown("""
     <style>
