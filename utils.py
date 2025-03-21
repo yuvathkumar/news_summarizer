@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 from textblob import TextBlob
 from collections import Counter
+from gtts import gTTS
+import os
 
 def scrape_articles(company_name):
     url = f"https://www.bing.com/news/search?q={company_name}+latest+news&format=rss"
@@ -92,7 +94,6 @@ def get_topics(title, summary):
     else:
         if raw_topics:
             title_words = set(title.lower().split())
-            # Filter out names (basic heuristic: skip if all lowercase and no keywords)
             filtered_topics = [p for p in raw_topics if not (len(p.split()) == 2 and p.split()[1] in {"musk", "gerber", "nadella"})]
             if filtered_topics:
                 best_topic = max(filtered_topics, key=lambda p: (len(set(p.split()) & title_words), len(p)))
@@ -137,6 +138,19 @@ def comparative_analysis(company_name, articles):
     elif neg > pos + 2:
         final_summary = f"Mostly negative coverage for {company_name}."
 
+    # Translate to Hindi (basic manual translation for now)
+    hindi_translations = {
+        "Mixed sentiment with no clear trend": "मिश्रित भावना बिना स्पष्ट रुझान के।",
+        "Mostly positive coverage for": "के लिए ज्यादातर सकारात्मक कवरेज।",
+        "Mostly negative coverage for": "के लिए ज्यादातर नकारात्मक कवरेज।"
+    }
+    hindi_summary = hindi_translations.get(final_summary.split(company_name)[0].strip(), final_summary) + f" {company_name}"
+    
+    # Generate TTS
+    audio_file = f"{company_name}_summary.mp3"
+    tts = gTTS(text=hindi_summary, lang='hi', slow=False)
+    tts.save(audio_file)
+
     return {
         "Company": company_name,
         "Articles": articles,
@@ -149,7 +163,7 @@ def comparative_analysis(company_name, articles):
             }
         },
         "Final Sentiment Analysis": final_summary,
-        "Audio": "[Placeholder for Hindi Speech]"
+        "Audio": audio_file
     }
 
 # Test
@@ -173,3 +187,4 @@ if __name__ == "__main__":
         print(f"  - {diff['Comparison']} {diff['Impact']}")
     print(f"Topic Overlap: {result['Comparative Sentiment Score']['Topic Overlap']}")
     print(f"Final Sentiment: {result['Final Sentiment Analysis']}")
+    print(f"Hindi Audio saved as: {result['Audio']}")
