@@ -6,6 +6,7 @@ from textblob import TextBlob
 from collections import Counter
 from gtts import gTTS
 import os
+from deep_translator import GoogleTranslator
 
 def scrape_articles(company_name):
     url = f"https://www.bing.com/news/search?q={company_name}&format=rss"
@@ -140,9 +141,12 @@ def comparative_analysis(company_name, articles):
     elif neg > pos + 2:
         final_summary = f"Mostly negative coverage for {company_name}."
 
-    # Generate TTS using the English summary
+    # Translate the English summary to Hindi
+    hindi_summary = GoogleTranslator(source='en', target='hi').translate(final_summary)
+
+    # Generate TTS with the translated Hindi text
     audio_file = f"{company_name}_summary.mp3"
-    tts = gTTS(text=final_summary, lang='hi', slow=False)
+    tts = gTTS(text=hindi_summary, lang='hi', slow=False)
     tts.save(audio_file)
 
     return {
@@ -159,7 +163,6 @@ def comparative_analysis(company_name, articles):
         "Final Sentiment Analysis": final_summary,
         "Audio": audio_file
     }
-
 # Test
 if __name__ == "__main__":
     company = input("Enter a company name: ")
