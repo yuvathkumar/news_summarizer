@@ -87,21 +87,21 @@ This project extracts **at least 10 unique news articles** about a given company
   ```bash
   python -m venv venv
   source venv/bin/activate  # On Windows: venv\Scripts\activate
-  '''
+  ```
 ### 2️⃣ Install Dependencies
   ```bash
     pip install -r requirements.txt
-  '''
+  ```
 ### 4️⃣ Run the FastAPI Backend Run the FastAPI Backend 
   ```bash
   uvicorn api:app --reload
-  '''
+  ```
 - The API will start at http://127.0.0.1:8000.
 
 ### 4️⃣ Run the Streamlit Frontend
    ```bash
     streamlit run app.py
-  '''
+  ```
 - Open http://localhost:8501/ in your browser.
 
 ---
@@ -114,7 +114,7 @@ This project extracts **at least 10 unique news articles** about a given company
 - Generate Hindi Audio – Click to play Hindi speech summarizing the sentiment.
 
 ### 📊 Example JSON Output
-  '''bash
+  ```bash
   {
     "Company": "Tesla",
     "Articles": [
@@ -152,7 +152,7 @@ This project extracts **at least 10 unique news articles** about a given company
     "Final Sentiment Analysis": "Tesla’s latest news coverage is mostly positive. Potential stock growth expected.",
     "Audio": "[Play Hindi Speech]"
   }
-   '''
+   ```
 ---
 
 ## 💡 Assumptions & Limitations
@@ -169,5 +169,6 @@ This project extracts **at least 10 unique news articles** about a given company
 
 # 🏆 Acknowledgments
 ## Special thanks to Akaike Technologies for this intern assignment.
+
 ---
 
