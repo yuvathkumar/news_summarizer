@@ -168,7 +168,7 @@ This project extracts **at least 10 unique news articles** about a given company
 ---
 
 # 🏆 Acknowledgments
-## Special thanks to Akaike Technologies for this intern assignment.
+## Special thanks to [Akaike Technologies] (https://www.akaike.ai/) for this intern assignment.
 
 ---
 
