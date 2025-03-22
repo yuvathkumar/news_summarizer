@@ -60,14 +60,16 @@ This project extracts **at least 10 unique news articles** about a given company
   - `/get-results`: Fetches final structured report.  
 
 ## 🛠️ Tech Stack  
-| Component | Technology Used |
-|-----------|----------------|
-| **Backend** | Python, FastAPI |
-| **Web Scraping** | BeautifulSoup |
+
+| Component            | Technology Used     |
+|----------------------|--------------------|
+| **Backend**         | Python, FastAPI    |
+| **Web Scraping**    | BeautifulSoup      |
 | **Sentiment Analysis** | TextBlob / VADER |
-| **Text-to-Speech** | gTTS / VITS |
-| **Frontend** | Streamlit |
-| **Deployment** | Hugging Face Spaces |
+| **Text-to-Speech**  | gTTS / VITS        |
+| **Frontend**        | Streamlit          |
+| **Deployment**      | Hugging Face Spaces |
+
 
 ---
 
